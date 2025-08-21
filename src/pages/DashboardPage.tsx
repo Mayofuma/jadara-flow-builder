@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Heart, ShoppingCart, GraduationCap, CheckCircle, ArrowRight } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Link, useNavigate } from "react-router-dom";
+import { LogOut, Send, Heart, ShoppingCart, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface IndustryInfo {
   title: string;
@@ -16,21 +20,21 @@ interface IndustryInfo {
 }
 
 const industryTemplates: Record<string, IndustryInfo> = {
-  healthcare: {
+  Healthcare: {
     title: "Healthcare Automation",
     description: "Streamline patient communications and appointment management",
     template: "Appointment Reminder Workflow",
     icon: Heart,
     color: "text-red-500"
   },
-  ecommerce: {
+  "E-commerce": {
     title: "E-commerce Automation", 
     description: "Recover lost sales and improve customer engagement",
     template: "Abandoned Cart Recovery Workflow",
     icon: ShoppingCart,
     color: "text-blue-500"
   },
-  education: {
+  Education: {
     title: "Education Automation",
     description: "Enhance student onboarding and course engagement",
     template: "Student Onboarding Workflow", 
@@ -40,101 +44,162 @@ const industryTemplates: Record<string, IndustryInfo> = {
 };
 
 const DashboardPage = () => {
-  const [selectedIndustry, setSelectedIndustry] = useState<string>("");
-  const [businessInfo, setBusinessInfo] = useState<string>("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    industry: "",
+    businessDescription: ""
+  });
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user, signOut, loading } = useAuth();
+  const navigate = useNavigate();
 
-  // Mock user data - in real app this would come from auth context
-  const userName = "John Smith";
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+    }
+  }, [user, loading, navigate]);
+
+  // Load user profile
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (data) {
+          setUserProfile(data);
+          setFormData({
+            industry: data.industry || "",
+            businessDescription: data.business_description || ""
+          });
+        }
+      }
+    };
+
+    if (user) {
+      loadUserProfile();
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedIndustry || !businessInfo.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please select an industry and provide business information.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const formData = {
-      industry: selectedIndustry,
-      businessInfo: businessInfo,
-      userName: userName,
-      timestamp: new Date().toISOString()
-    };
-
+    if (!user) return;
+    
+    setIsLoading(true);
+    
     try {
-      // Send to the provided webhook
+      // Update or create user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          first_name: user.user_metadata?.first_name,
+          last_name: user.user_metadata?.last_name,
+          industry: formData.industry,
+          business_description: formData.businessDescription
+        });
+
+      if (profileError) throw profileError;
+
+      // Send to webhook
+      const payload = {
+        industry: formData.industry,
+        businessDescription: formData.businessDescription,
+        userEmail: user.email,
+        userName: `${user.user_metadata?.first_name} ${user.user_metadata?.last_name}`,
+        timestamp: new Date().toISOString()
+      };
+
       const response = await fetch("https://n8n.chuvana.com/webhook-test/3c2a3bae-0107-4b2e-b967-a7b36587671e", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        setIsSubmitted(true);
         toast({
-          title: "Success!",
-          description: "Your information has been submitted successfully.",
+          title: "Thank you!",
+          description: "A Jadara Labs workflow specialist will reach out shortly.",
         });
+        
+        // Update local state
+        setUserProfile(prev => ({
+          ...prev,
+          industry: formData.industry,
+          business_description: formData.businessDescription
+        }));
       } else {
-        throw new Error("Failed to submit");
+        throw new Error("Failed to submit to webhook");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Submission Error",
-        description: "There was an error submitting your information. Please try again.",
-        variant: "destructive"
+        title: "Error",
+        description: error.message || "Failed to submit your information. Please try again.",
+        variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (isSubmitted) {
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    } else {
+      navigate('/');
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-6">
-        <Card className="w-full max-w-2xl shadow-strong text-center">
-          <CardContent className="p-12">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-foreground mb-4">Thank You!</h2>
-            <p className="text-xl text-muted-foreground mb-6">
-              A Jadara Labs workflow specialist will reach out shortly to help you get started with your automation journey.
-            </p>
-            <p className="text-muted-foreground mb-8">
-              In the meantime, check your email for helpful resources and tips to maximize your workflow efficiency.
-            </p>
-            <Button 
-              onClick={() => window.location.href = "/"}
-              size="lg"
-            >
-              Return to Homepage
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
       </div>
     );
   }
 
-  const selectedIndustryInfo = selectedIndustry ? industryTemplates[selectedIndustry] : null;
+  if (!user) {
+    return null; // Will redirect to login
+  }
+
+  const selectedIndustryInfo = formData.industry ? industryTemplates[formData.industry] : null;
 
   return (
     <div className="min-h-screen bg-secondary/30">
-      <div className="bg-gradient-primary text-white py-16 px-6">
-        <div className="container mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Welcome, {userName}! 👋
-          </h1>
-          <p className="text-xl text-blue-100">
-            Let's set up your perfect automation workflow
-          </p>
+      <div className="bg-gradient-hero text-white py-16 px-6">
+        <div className="container mx-auto flex justify-between items-center">
+          <div>
+            <Link to="/" className="inline-flex items-center space-x-2 mb-6 hover:opacity-80 transition-smooth">
+              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                <span className="text-primary font-bold text-lg">J</span>
+              </div>
+              <span className="text-xl font-bold">Jadara Labs</span>
+            </Link>
+            <h1 className="text-3xl font-bold">
+              Welcome to your dashboard, {user.user_metadata?.first_name || 'there'}! 👋
+            </h1>
+            <p className="text-xl text-blue-100 mt-2">
+              Let's set up your perfect automation workflow
+            </p>
+          </div>
+          
+          <Button variant="outline" size="sm" className="flex items-center gap-2 text-white border-white hover:bg-white hover:text-primary" onClick={handleLogout}>
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
         </div>
       </div>
 
@@ -150,14 +215,14 @@ const DashboardPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+                <Select value={formData.industry} onValueChange={(value) => setFormData(prev => ({...prev, industry: value}))}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select your industry" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="healthcare">Healthcare</SelectItem>
-                    <SelectItem value="ecommerce">E-commerce</SelectItem>
-                    <SelectItem value="education">Education</SelectItem>
+                    <SelectItem value="Healthcare">Healthcare</SelectItem>
+                    <SelectItem value="E-commerce">E-commerce</SelectItem>
+                    <SelectItem value="Education">Education</SelectItem>
                   </SelectContent>
                 </Select>
               </CardContent>
@@ -199,11 +264,11 @@ const DashboardPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Label htmlFor="businessInfo">Business Information & Accomplishments</Label>
+                  <Label htmlFor="businessDescription">Business Information & Accomplishments</Label>
                   <Textarea
-                    id="businessInfo"
-                    value={businessInfo}
-                    onChange={(e) => setBusinessInfo(e.target.value)}
+                    id="businessDescription"
+                    value={formData.businessDescription}
+                    onChange={(e) => setFormData(prev => ({...prev, businessDescription: e.target.value}))}
                     placeholder="Tell us about your business size, current processes, key achievements, challenges you're facing, and what you hope to accomplish with automation..."
                     className="min-h-[150px] resize-none"
                   />
@@ -216,14 +281,9 @@ const DashboardPage = () => {
 
             {/* Submit Button */}
             <div className="text-center">
-              <Button 
-                type="submit" 
-                size="lg"
-                className="bg-gradient-primary hover:opacity-90 px-8"
-                disabled={!selectedIndustry || !businessInfo.trim()}
-              >
-                Submit & Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                <Send className="mr-2 h-4 w-4" />
+                {isLoading ? "Submitting..." : "Submit Information"}
               </Button>
               <p className="text-sm text-muted-foreground mt-4">
                 Our team will review your information and reach out within 24 hours
