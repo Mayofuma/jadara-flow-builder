@@ -103,6 +103,8 @@ const DashboardPage = () => {
           last_name: user.user_metadata?.last_name,
           industry: formData.industry,
           business_description: formData.businessDescription
+        }, {
+          onConflict: 'user_id'
         });
 
       if (profileError) throw profileError;
