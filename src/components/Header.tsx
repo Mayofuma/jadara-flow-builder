@@ -22,6 +22,7 @@ const Header = () => {
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-smooth">Features</a>
             <a href="#workflows" className="text-muted-foreground hover:text-foreground transition-smooth">Templates</a>
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-smooth">Pricing</a>
+            <Link to="/research" className="text-muted-foreground hover:text-foreground transition-smooth">Research & Innovation</Link>
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -49,6 +50,7 @@ const Header = () => {
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-smooth">Features</a>
               <a href="#workflows" className="text-muted-foreground hover:text-foreground transition-smooth">Templates</a>
               <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-smooth">Pricing</a>
+              <Link to="/research" className="text-muted-foreground hover:text-foreground transition-smooth">Research & Innovation</Link>
               <div className="flex flex-col space-y-2 pt-4">
                 <Link to="/login">
                   <Button variant="ghost" className="w-full">Login</Button>
