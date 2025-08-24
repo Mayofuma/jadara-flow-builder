@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
 import { ArrowRight, Droplets, Brain, MessageSquare, Monitor, CheckCircle, Target, Users, Building, Globe } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -66,10 +67,18 @@ const SFMEWSPage = () => {
               <p className="text-xl md:text-2xl mb-8 text-white/90">
                 AI + IoT innovation to protect Lagos from recurrent flooding.
               </p>
-              <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
-                Partner with Us
-                <ArrowRight className="ml-2" />
-              </Button>
+              <Link to="/sfmews/dashboard">
+                <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 mr-4">
+                  View Dashboard
+                  <ArrowRight className="ml-2" />
+                </Button>
+              </Link>
+              <Link to="/sfmews/sensors">
+                <Button size="lg" variant="outline" className="bg-white/10 text-white border-white hover:bg-white/20">
+                  Manage Sensors
+                  <ArrowRight className="ml-2" />
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
