@@ -21,6 +21,11 @@
     --primary-dark: 217 91% 45%;
     --primary-light: 217 91% 75%;
     --primary-foreground: 0 0% 100%;
+    
+    /* Healthcare/Clinic Theme - #0a7cff */
+    --clinic-primary: 220 100% 52%;
+    --clinic-primary-light: 220 100% 65%;
+    --clinic-primary-dark: 220 100% 40%;
 
     /* Secondary - Light Blue Accents */
     --secondary: 214 100% 97%;

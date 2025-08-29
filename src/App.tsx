@@ -11,6 +11,7 @@ import DashboardPage from "./pages/DashboardPage";
 import SFMEWSPage from "./pages/SFMEWSPage";
 import SFMEWSDashboard from "./pages/SFMEWSDashboard";
 import SensorManagement from "./pages/SensorManagement";
+import HealthcareWorkflow from "./pages/HealthcareWorkflow";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/sfmews" element={<SFMEWSPage />} />
             <Route path="/sfmews/dashboard" element={<SFMEWSDashboard />} />
             <Route path="/sfmews/sensors" element={<SensorManagement />} />
+            <Route path="/healthcare-workflow" element={<HealthcareWorkflow />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

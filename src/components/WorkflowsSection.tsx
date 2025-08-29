@@ -14,8 +14,10 @@ import {
   Mail,
   MessageSquare,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  ExternalLink
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const workflowTemplates = [
   {
@@ -120,6 +122,27 @@ const WorkflowsSection = () => {
                             </div>
                           );
                         })}
+                        
+                        {workflow.id === 'healthcare' && (
+                          <div className="mt-6 pt-6 border-t border-border">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-semibold text-foreground mb-1">
+                                  Live Healthcare Workflow
+                                </h4>
+                                <p className="text-muted-foreground text-sm">
+                                  Experience the working appointment reminder system with real EMR integration, testing tools, and admin dashboard.
+                                </p>
+                              </div>
+                              <Button asChild className="ml-4">
+                                <a href="/healthcare-workflow">
+                                  <ExternalLink className="h-4 w-4 mr-2" />
+                                  Try Live Version
+                                </a>
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </AccordionContent>
                   </Card>
