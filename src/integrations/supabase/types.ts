@@ -14,10 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: string
+          is_active: boolean
+          key_name: string
+          last_used_at: string | null
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_name: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_name?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_description: string | null
+          company_name: string | null
           created_at: string
+          default_sender_id: string | null
           first_name: string | null
           id: string
           industry: string | null
@@ -27,7 +62,9 @@ export type Database = {
         }
         Insert: {
           business_description?: string | null
+          company_name?: string | null
           created_at?: string
+          default_sender_id?: string | null
           first_name?: string | null
           id?: string
           industry?: string | null
@@ -37,11 +74,126 @@ export type Database = {
         }
         Update: {
           business_description?: string | null
+          company_name?: string | null
           created_at?: string
+          default_sender_id?: string | null
           first_name?: string | null
           id?: string
           industry?: string | null
           last_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sms_logs: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          credits_used: number
+          id: string
+          message: string
+          provider_response: Json | null
+          recipient: string
+          sender_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          credits_used: number
+          id?: string
+          message: string
+          provider_response?: Json | null
+          recipient: string
+          sender_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          credits_used?: number
+          id?: string
+          message?: string
+          provider_response?: Json | null
+          recipient?: string
+          sender_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_logs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          reference: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          reference?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          reference?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
           updated_at?: string
           user_id?: string
         }
