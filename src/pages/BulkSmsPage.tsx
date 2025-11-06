@@ -20,6 +20,12 @@ interface SmsLog {
   created_at: string;
 }
 
+interface Wallet {
+  id: string;
+  balance: number;
+  currency: string;
+}
+
 export default function BulkSmsPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -29,6 +35,10 @@ export default function BulkSmsPage() {
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState<SmsLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(true);
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [walletLoading, setWalletLoading] = useState(true);
+
+  const SMS_COST = 5; // Cost per SMS in NGN
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -39,8 +49,31 @@ export default function BulkSmsPage() {
   useEffect(() => {
     if (user) {
       fetchLogs();
+      fetchWallet();
     }
   }, [user]);
+
+  const fetchWallet = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('wallet')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) throw error;
+      setWallet(data);
+    } catch (error) {
+      console.error('Error fetching wallet:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load wallet balance',
+        variant: 'destructive',
+      });
+    } finally {
+      setWalletLoading(false);
+    }
+  };
 
   const fetchLogs = async () => {
     try {
@@ -80,6 +113,19 @@ export default function BulkSmsPage() {
       return;
     }
 
+    // Check balance
+    const recipientCount = recipients.split(',').filter(r => r.trim()).length;
+    const estimatedCost = recipientCount * SMS_COST;
+
+    if (wallet && wallet.balance < estimatedCost) {
+      toast({
+        title: 'Insufficient Balance',
+        description: `You need ${estimatedCost} ${wallet.currency} but have ${wallet.balance} ${wallet.currency}. Please top up your wallet.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -101,10 +147,11 @@ export default function BulkSmsPage() {
         description: `Successfully sent ${successCount} message(s). ${failCount > 0 ? `${failCount} failed.` : ''}`,
       });
 
-      // Clear form and refresh logs
+      // Clear form and refresh data
       setRecipients('');
       setMessage('');
       await fetchLogs();
+      await fetchWallet();
     } catch (error: any) {
       console.error('Error sending SMS:', error);
       toast({
@@ -154,6 +201,44 @@ export default function BulkSmsPage() {
         </Button>
 
         <div className="grid gap-8">
+          {/* Wallet Balance Card */}
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Wallet Balance</span>
+                {walletLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {wallet ? (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-3xl font-bold">
+                      {wallet.balance.toFixed(2)} {wallet.currency}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Available Credits
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg">
+                    <span className="text-sm">Cost per SMS</span>
+                    <span className="font-semibold">{SMS_COST} {wallet.currency}</span>
+                  </div>
+                  {recipients && (
+                    <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg">
+                      <span className="text-sm">Estimated Cost</span>
+                      <span className="font-semibold">
+                        {(recipients.split(',').filter(r => r.trim()).length * SMS_COST).toFixed(2)} {wallet.currency}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No wallet found</p>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Bulk SMS</CardTitle>
