@@ -254,12 +254,22 @@ const TopUpPage = () => {
             </form>
 
             {/* Payment Notice */}
-            <div className="bg-muted rounded-lg p-4 text-sm text-muted-foreground">
-              <p className="font-medium mb-1">Secure Payment via Paystack</p>
-              <p>
-                Your payment will be processed securely through Paystack. You'll be redirected
-                to complete your payment and returned here automatically.
-              </p>
+            <div className="bg-muted rounded-lg p-4 text-sm text-muted-foreground space-y-2">
+              <div>
+                <p className="font-medium mb-1">Secure Payment via Paystack</p>
+                <p>
+                  Your payment will be processed securely through Paystack. You'll be redirected
+                  to complete your payment and returned here automatically.
+                </p>
+              </div>
+              <div className="text-xs border-t border-border pt-2 mt-2">
+                <p className="font-medium">Setup Instructions:</p>
+                <ol className="list-decimal list-inside space-y-1 mt-1">
+                  <li>Go to your Paystack dashboard at <a href="https://dashboard.paystack.com/#/settings/webhooks" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Webhooks Settings</a></li>
+                  <li>Add this webhook URL: <code className="bg-background px-1 rounded text-xs">https://mupprrjhftvxhblotcyt.supabase.co/functions/v1/paystack-webhook</code></li>
+                  <li>This enables automatic balance updates when payments are completed</li>
+                </ol>
+              </div>
             </div>
           </CardContent>
         </Card>
