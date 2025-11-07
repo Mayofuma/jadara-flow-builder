@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Send, ArrowLeft } from 'lucide-react';
+import { Loader2, Send, ArrowLeft, Plus, Wallet as WalletIcon } from 'lucide-react';
 
 interface SmsLog {
   id: string;
@@ -205,20 +205,34 @@ export default function BulkSmsPage() {
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Wallet Balance</span>
+                <div className="flex items-center gap-2">
+                  <WalletIcon className="h-5 w-5" />
+                  <span>Wallet Balance</span>
+                </div>
                 {walletLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {wallet ? (
                 <div className="space-y-4">
-                  <div>
-                    <p className="text-3xl font-bold">
-                      {wallet.balance.toFixed(2)} {wallet.currency}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Available Credits
-                    </p>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-3xl font-bold">
+                        {wallet.balance.toFixed(2)} {wallet.currency}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Available Credits
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/top-up')}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Top Up
+                    </Button>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg">
                     <span className="text-sm">Cost per SMS</span>
