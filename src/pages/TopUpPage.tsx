@@ -73,56 +73,98 @@ const TopUpPage = () => {
     setLoading(true);
 
     try {
-      // Get current balance
-      const { data: walletData, error: walletError } = await supabase
-        .from('wallet')
-        .select('balance')
-        .eq('user_id', user?.id)
-        .single();
+      // Initialize payment with Paystack
+      const { data: initData, error: initError } = await supabase.functions.invoke(
+        'paystack-payment',
+        {
+          body: {
+            action: 'initialize',
+            amount: topUpAmount,
+            email: user?.email,
+          },
+        }
+      );
 
-      if (walletError) throw walletError;
+      if (initError) throw initError;
 
-      const currentBalance = parseFloat(walletData.balance.toString());
-      const newBalance = currentBalance + topUpAmount;
+      if (!initData?.data?.authorization_url) {
+        throw new Error('Failed to get payment URL');
+      }
 
-      // Update wallet balance
-      const { error: updateError } = await supabase
-        .from('wallet')
-        .update({ balance: newBalance })
-        .eq('user_id', user?.id);
+      // Open Paystack payment page in a popup
+      const paymentWindow = window.open(
+        initData.data.authorization_url,
+        'Paystack Payment',
+        'width=500,height=700'
+      );
 
-      if (updateError) throw updateError;
-
-      // Log transaction
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user?.id,
-          type: 'credit',
-          amount: topUpAmount,
-          balance_before: currentBalance,
-          balance_after: newBalance,
-          description: 'Wallet top-up',
-          reference: `TOPUP-${Date.now()}`,
+      if (!paymentWindow) {
+        toast({
+          title: 'Popup Blocked',
+          description: 'Please allow popups to complete payment',
+          variant: 'destructive',
         });
+        setLoading(false);
+        return;
+      }
 
-      if (transactionError) throw transactionError;
+      // Poll for payment completion
+      const reference = initData.data.reference;
+      const pollInterval = setInterval(async () => {
+        if (paymentWindow.closed) {
+          clearInterval(pollInterval);
+          
+          // Verify payment
+          try {
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+              'paystack-payment',
+              {
+                body: {
+                  action: 'verify',
+                  reference: reference,
+                },
+              }
+            );
 
-      toast({
-        title: 'Success',
-        description: `Successfully added ₦${topUpAmount.toFixed(2)} to your wallet`,
-      });
+            if (verifyError) throw verifyError;
 
-      setBalance(newBalance);
-      setAmount('');
-    } catch (error) {
-      console.error('Error processing top-up:', error);
+            toast({
+              title: 'Payment Successful',
+              description: `Successfully added ₦${topUpAmount.toFixed(2)} to your wallet`,
+            });
+
+            setBalance(verifyData.balance);
+            setAmount('');
+            await fetchBalance();
+          } catch (error: any) {
+            console.error('Payment verification error:', error);
+            toast({
+              title: 'Payment Verification Failed',
+              description: error.message || 'Please contact support if money was debited',
+              variant: 'destructive',
+            });
+          } finally {
+            setLoading(false);
+          }
+        }
+      }, 1000);
+
+      // Clear interval after 10 minutes
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        if (!paymentWindow.closed) {
+          paymentWindow.close();
+        }
+        setLoading(false);
+      }, 600000);
+
+    } catch (error: any) {
+      console.error('Error initializing payment:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process top-up. Please try again.',
+        description: error.message || 'Failed to initialize payment. Please try again.',
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -213,10 +255,10 @@ const TopUpPage = () => {
 
             {/* Payment Notice */}
             <div className="bg-muted rounded-lg p-4 text-sm text-muted-foreground">
-              <p className="font-medium mb-1">Payment Integration</p>
+              <p className="font-medium mb-1">Secure Payment via Paystack</p>
               <p>
-                This is a demo version. In production, this would integrate with a payment
-                gateway like Stripe or Paystack to process real payments.
+                Your payment will be processed securely through Paystack. You'll be redirected
+                to complete your payment and returned here automatically.
               </p>
             </div>
           </CardContent>
