@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, Send, Heart, ShoppingCart, GraduationCap, History, Wallet } from "lucide-react";
+import { LogOut, Send, Heart, ShoppingCart, GraduationCap, History, Wallet, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -207,6 +207,43 @@ const DashboardPage = () => {
 
       <div className="container mx-auto px-6 py-12">
         <div className="max-w-4xl mx-auto">
+          {/* Products & Services */}
+          <Card className="shadow-soft mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            <CardHeader>
+              <CardTitle>Our Products & Services</CardTitle>
+              <CardDescription>Choose a product to get started</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Link to="/sms-admin">
+                  <Card className="shadow-soft hover:shadow-lg transition-smooth cursor-pointer h-full border-2 border-primary/20 hover:border-primary/40">
+                    <CardContent className="flex items-center gap-4 p-6">
+                      <div className="w-16 h-16 bg-gradient-primary rounded-lg flex items-center justify-center">
+                        <MessageSquare className="h-8 w-8 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-xl mb-1">Bulk SMS Service</h3>
+                        <p className="text-sm text-muted-foreground">Send bulk SMS messages with powerful API integration</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+                
+                <Card className="shadow-soft cursor-not-allowed h-full border-2 border-border opacity-60">
+                  <CardContent className="flex items-center gap-4 p-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                      <Heart className="h-8 w-8 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-xl mb-1">Workflow Automation</h3>
+                      <p className="text-sm text-muted-foreground">Custom business process automation (Coming Soon)</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <Link to="/transactions">
