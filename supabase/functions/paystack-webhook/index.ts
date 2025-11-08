@@ -159,6 +159,27 @@ serve(async (req) => {
 
     console.log(`Wallet updated successfully via webhook. New balance: ${newBalance} NGN`);
 
+    // Send email notification in background (non-blocking)
+    const emailPromise = supabase.functions.invoke('send-email', {
+      body: {
+        email: paymentData.customer?.email || '',
+        amount: amountPaid,
+        reference: reference,
+        newBalance: newBalance,
+      }
+    }).then(({ error: emailError }) => {
+      if (emailError) {
+        console.error('Error sending email notification:', emailError);
+      } else {
+        console.log('Email notification sent successfully');
+      }
+    }).catch(err => {
+      console.error('Failed to send email notification:', err);
+    });
+
+    // Don't wait for email - let it run in background
+    EdgeRuntime.waitUntil(emailPromise);
+
     return new Response(
       JSON.stringify({
         status: 'success',
