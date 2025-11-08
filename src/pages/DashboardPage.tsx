@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, Send, Heart, ShoppingCart, GraduationCap } from "lucide-react";
+import { LogOut, Send, Heart, ShoppingCart, GraduationCap, History, Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -207,6 +207,36 @@ const DashboardPage = () => {
 
       <div className="container mx-auto px-6 py-12">
         <div className="max-w-4xl mx-auto">
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <Link to="/transactions">
+              <Card className="shadow-soft hover:shadow-lg transition-smooth cursor-pointer h-full">
+                <CardContent className="flex items-center gap-4 p-6">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <History className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Transaction History</h3>
+                    <p className="text-sm text-muted-foreground">View all your wallet transactions</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to="/top-up">
+              <Card className="shadow-soft hover:shadow-lg transition-smooth cursor-pointer h-full">
+                <CardContent className="flex items-center gap-4 p-6">
+                  <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+                    <Wallet className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Top Up Wallet</h3>
+                    <p className="text-sm text-muted-foreground">Add funds to your wallet</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Industry Selection */}
             <Card className="shadow-soft">
