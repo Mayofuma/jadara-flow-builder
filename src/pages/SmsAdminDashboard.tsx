@@ -22,6 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format, subDays, startOfDay } from "date-fns";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { ApiKeyManager } from "@/components/ApiKeyManager";
 
 interface SmsStats {
   totalSent: number;
@@ -37,19 +38,9 @@ interface DailyStats {
   failed: number;
 }
 
-interface ApiKey {
-  id: string;
-  key_name: string;
-  api_key: string;
-  is_active: boolean;
-  created_at: string;
-  last_used_at: string | null;
-}
-
 const SmsAdminDashboard = () => {
   const [stats, setStats] = useState<SmsStats>({ totalSent: 0, successCount: 0, failedCount: 0, totalCost: 0 });
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [wallet, setWallet] = useState<any>(null);
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,15 +113,6 @@ const SmsAdminDashboard = () => {
 
       if (walletError && walletError.code !== 'PGRST116') throw walletError;
       setWallet(walletData);
-
-      // Load API keys
-      const { data: keysData, error: keysError } = await supabase
-        .from('api_keys')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (keysError) throw keysError;
-      setApiKeys(keysData || []);
 
     } catch (error: any) {
       toast({
@@ -499,67 +481,9 @@ const SmsAdminDashboard = () => {
           </Card>
 
           {/* API Keys Management */}
-          <Card className="shadow-soft" id="api-keys-section">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                API Keys
-              </CardTitle>
-              <CardDescription>
-                Manage your API keys for programmatic access to SMS services
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {apiKeys.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Key className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                  <p>No API keys created yet</p>
-                  <p className="text-sm mt-2">Create an API key to access SMS services programmatically</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>API Key</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead>Last Used</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {apiKeys.map((key) => (
-                        <TableRow key={key.id}>
-                          <TableCell className="font-medium">{key.key_name}</TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {key.api_key.substring(0, 20)}...
-                          </TableCell>
-                          <TableCell>
-                            {key.is_active ? (
-                              <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                                Active
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400">
-                                Inactive
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {format(new Date(key.created_at), 'MMM dd, yyyy')}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {key.last_used_at ? format(new Date(key.last_used_at), 'MMM dd, yyyy') : 'Never'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <div id="api-keys-section">
+            <ApiKeyManager />
+          </div>
         </div>
       </div>
     </div>
