@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           api_key: string
           created_at: string
+          expires_at: string | null
           id: string
           is_active: boolean
           key_name: string
@@ -28,6 +29,7 @@ export type Database = {
         Insert: {
           api_key: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           key_name: string
@@ -38,6 +40,7 @@ export type Database = {
         Update: {
           api_key?: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           key_name?: string
@@ -204,7 +207,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_api_key_valid: { Args: { key_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
