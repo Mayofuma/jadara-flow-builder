@@ -19,13 +19,22 @@ import {
   Plus
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, subDays, startOfDay } from "date-fns";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 interface SmsStats {
   totalSent: number;
   successCount: number;
   failedCount: number;
   totalCost: number;
+}
+
+interface DailyStats {
+  date: string;
+  sent: number;
+  success: number;
+  failed: number;
 }
 
 interface ApiKey {
@@ -42,6 +51,7 @@ const SmsAdminDashboard = () => {
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [wallet, setWallet] = useState<any>(null);
+  const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user, signOut, loading } = useAuth();
   const { toast } = useToast();
@@ -80,6 +90,29 @@ const SmsAdminDashboard = () => {
 
       setStats({ totalSent, successCount, failedCount, totalCost });
       setRecentLogs(logs?.slice(0, 5) || []);
+
+      // Calculate daily stats for the last 7 days
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = startOfDay(subDays(new Date(), 6 - i));
+        return {
+          date: format(date, 'MMM dd'),
+          sent: 0,
+          success: 0,
+          failed: 0,
+        };
+      });
+
+      logs?.forEach((log) => {
+        const logDate = format(startOfDay(new Date(log.created_at)), 'MMM dd');
+        const dayStats = last7Days.find(d => d.date === logDate);
+        if (dayStats) {
+          dayStats.sent += 1;
+          if (log.status === 'sent') dayStats.success += 1;
+          if (log.status === 'failed') dayStats.failed += 1;
+        }
+      });
+
+      setDailyStats(last7Days);
 
       // Load wallet
       const { data: walletData, error: walletError } = await supabase
@@ -136,6 +169,26 @@ const SmsAdminDashboard = () => {
   }
 
   const successRate = stats.totalSent > 0 ? ((stats.successCount / stats.totalSent) * 100).toFixed(1) : 0;
+
+  const deliveryChartData = [
+    { name: 'Successful', value: stats.successCount, fill: 'hsl(var(--chart-1))' },
+    { name: 'Failed', value: stats.failedCount, fill: 'hsl(var(--chart-2))' },
+  ];
+
+  const chartConfig = {
+    sent: {
+      label: "Total Sent",
+      color: "hsl(var(--chart-3))",
+    },
+    success: {
+      label: "Successful",
+      color: "hsl(var(--chart-1))",
+    },
+    failed: {
+      label: "Failed",
+      color: "hsl(var(--chart-2))",
+    },
+  };
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -237,6 +290,98 @@ const SmsAdminDashboard = () => {
                     Top Up
                   </Button>
                 </Link>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Delivery Rate Chart */}
+            <Card className="shadow-soft">
+              <CardHeader>
+                <CardTitle>Delivery Rate</CardTitle>
+                <CardDescription>Success vs Failed Messages</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {stats.totalSent === 0 ? (
+                  <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                    <div className="text-center">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                      <p>No data available</p>
+                    </div>
+                  </div>
+                ) : (
+                  <ChartContainer config={chartConfig} className="h-[300px]">
+                    <PieChart>
+                      <Pie
+                        data={deliveryChartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        dataKey="value"
+                      >
+                        {deliveryChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Legend />
+                    </PieChart>
+                  </ChartContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Usage Trends Chart */}
+            <Card className="shadow-soft">
+              <CardHeader>
+                <CardTitle>Usage Trends</CardTitle>
+                <CardDescription>Last 7 days activity</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {dailyStats.every(d => d.sent === 0) ? (
+                  <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                    <div className="text-center">
+                      <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                      <p>No data available</p>
+                    </div>
+                  </div>
+                ) : (
+                  <ChartContainer config={chartConfig} className="h-[300px]">
+                    <AreaChart data={dailyStats}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis 
+                        dataKey="date" 
+                        className="text-xs"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <YAxis 
+                        className="text-xs"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Legend />
+                      <Area
+                        type="monotone"
+                        dataKey="success"
+                        stackId="1"
+                        stroke="hsl(var(--chart-1))"
+                        fill="hsl(var(--chart-1))"
+                        fillOpacity={0.6}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="failed"
+                        stackId="1"
+                        stroke="hsl(var(--chart-2))"
+                        fill="hsl(var(--chart-2))"
+                        fillOpacity={0.6}
+                      />
+                    </AreaChart>
+                  </ChartContainer>
+                )}
               </CardContent>
             </Card>
           </div>
