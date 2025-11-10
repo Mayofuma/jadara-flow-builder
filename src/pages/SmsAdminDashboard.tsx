@@ -24,6 +24,7 @@ import { format, subDays, startOfDay } from "date-fns";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { ApiKeyManager } from "@/components/ApiKeyManager";
+import { ApiUsageAnalytics } from "@/components/ApiUsageAnalytics";
 
 interface SmsStats {
   totalSent: number;
@@ -494,6 +495,15 @@ const SmsAdminDashboard = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* API Usage Analytics Section */}
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">API Usage Analytics</h2>
+              <p className="text-muted-foreground">Track API performance and usage patterns</p>
+            </div>
+            <ApiUsageAnalytics />
+          </div>
 
           {/* API Keys Management */}
           <div id="api-keys-section">
