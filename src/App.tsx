@@ -16,6 +16,7 @@ import BulkSmsPage from "./pages/BulkSmsPage";
 import TopUpPage from "./pages/TopUpPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import SmsAdminDashboard from "./pages/SmsAdminDashboard";
+import ApiDocumentation from "./pages/ApiDocumentation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/healthcare-workflow" element={<HealthcareWorkflow />} />
             <Route path="/bulk-sms" element={<BulkSmsPage />} />
             <Route path="/sms-admin" element={<SmsAdminDashboard />} />
+            <Route path="/api-docs" element={<ApiDocumentation />} />
             <Route path="/top-up" element={<TopUpPage />} />
             <Route path="/transactions" element={<TransactionsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
