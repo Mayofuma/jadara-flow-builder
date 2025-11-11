@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import WorkflowsSection from "@/components/WorkflowsSection";
+import SmsPricingSection from "@/components/SmsPricingSection";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -99,6 +100,7 @@ const LandingPage = () => {
         </section>
         
         <WorkflowsSection />
+        <SmsPricingSection />
         <PricingSection />
       </main>
       <Footer />
