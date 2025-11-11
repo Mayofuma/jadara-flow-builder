@@ -1,4 +1,4 @@
-import { Heart, ShoppingCart, GraduationCap } from "lucide-react";
+import { Heart, ShoppingCart, GraduationCap, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const features = [
@@ -19,6 +19,12 @@ const features = [
     title: "Automation for Education",
     description: "Onboard students with AI-powered workflows.",
     details: "Streamline enrollment processes, course communications, and student engagement with intelligent automation sequences."
+  },
+  {
+    icon: MessageSquare,
+    title: "Bulk SMS Service",
+    description: "Send targeted SMS campaigns at scale.",
+    details: "Powerful API-driven SMS platform with bulk messaging, usage analytics, and comprehensive documentation. Perfect for marketing campaigns, notifications, and alerts."
   }
 ];
 
@@ -35,7 +41,7 @@ const FeaturesSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
             return (
